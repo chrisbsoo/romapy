@@ -1,7 +1,7 @@
 # romapy
 
 An independent Python implementation of **ROMA** (Representation and Quantification of Module
-Activity) — a method for scoring the activity of a gene set (pathway, transcription-factor target
+Activity), a method for scoring the activity of a gene set (pathway, transcription-factor target
 set, etc.) in individual samples from expression data, with statistical significance testing
 built in. 
 
@@ -9,6 +9,52 @@ Check the PyPI details here: https://pypi.org/project/romapy/
 Check the github repo here: https://github.com/chrisbsoo/romapy
 Check the LUAD example here: https://github.com/chrisbsoo/romapy/tree/main/examples/LUAD_baseline
 
+## 🤖 Ask an LLM about this repo
+
+Paste the block below into ChatGPT, Claude, Gemini, or whatever your favourite LLM is.
+This is a compact primer covering what this project does, how it's
+built, and where everything lives, so you can ask follow-up questions
+without reading the whole repo first.
+
+```
+I'm looking at a GitHub repository called "romapy". Here's what you need to know:
+
+WHAT IT IS: An independent Python implementation of ROMA (Representation and
+Quantification of Module Activity) — a published gene-set/pathway activity scoring
+method for expression data (Martignetti et al., 2016, Frontiers in Genetics,
+https://doi.org/10.3389/fgene.2016.00018). The original method exists in Java
+(sysbio-curie/Roma) and R (sysbio-curie/rROMA); this fills the gap for Python.
+
+WHAT IT DOES: Given gene expression data (genes x samples) and gene set definitions
+(e.g. MSigDB Hallmark), computes a per-sample "activity score" for each gene set via
+fixed-center, sign-oriented, robust PCA — then tests statistical significance via
+permutation testing against a null distribution of random gene sets (not just raw PC1,
+which has no significance grounding on its own).
+
+KEY FILES:
+- src/romapy/core.py — the ROMA class: _compute_module (PCA), _orient_pc1 (sign
+  correction), _trim_outliers (robust leave-one-out trimming), _null_distribution
+  (permutation significance testing), fit() (orchestrates all of the above)
+- src/romapy/io.py — load_gmt(), parses standard .gmt gene set files
+- src/romapy/results.py — resultROMA, the dataclass fit() returns
+- tests/ — 27 tests, including a correctness check validating the batched
+  power-iteration implementation against an exact-SVD reference
+- examples/LUAD_baseline/ — a real-data validation example: applies romapy to
+  TCGA-LUAD (lung adenocarcinoma) data, finding 9 pathways significantly associated
+  with tumor stage after FDR correction
+
+ENGINEERING NOTES WORTH KNOWING:
+- Permutation testing and outlier trimming both use batched power iteration
+  (numpy einsum) instead of per-sample/per-permutation SVD, for a ~2,600x runtime
+  reduction on real 510-sample data (8+ hrs -> 11s), validated for correctness
+  against exact SVD (atol=0.05)
+- CI runs tests + lint across Python 3.10-3.14 on every push/PR; CD publishes to
+  PyPI automatically on version tags via OIDC trusted publishing (no stored secrets)
+
+Please read through the repo structure and be ready to answer questions about the
+algorithm, the codebase, or help me extend it (e.g. non-linear PCA variants —
+kernel PCA, principal curves — which the original paper names as future work).
+```
 
 ## Why this exists
 
